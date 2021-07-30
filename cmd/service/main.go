@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
@@ -37,17 +39,30 @@ func GetDetails(id int64) []byte {
 
 func main() {
 	populateData()
-	http.HandleFunc("/mainListings", handlerListings)
-	http.HandleFunc("/getDetails", handlerDetails)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	r := mux.NewRouter()
+	r.HandleFunc("/mainListings", handlerListings)
+	r.HandleFunc("/getDetails", handlerDetails)
+
+	log.Println("Server running")
+	http.ListenAndServe(":8080", handlers.CORS()(r))
+
+
 }
 
 func handlerListings(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.Method)
+	log.Println(r)
+	//enableCors(&w)
 	w.Write(GetMainListings())
 	w.Header().Set("Content-Type", "application/json")
 }
 
 func handlerDetails(w http.ResponseWriter, r *http.Request) {
+
+	log.Println(r.Method)
+	log.Println(r)
+	//enableCors(&w)
 
 	id, ok := r.URL.Query()["id"]
 
@@ -100,5 +115,13 @@ func populateData()  {
 	listings = append(listings, l2)
 	listings = append(listings, l3)
 	listings = append(listings, l4)
+
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Content-Type", "application/json")
+	(*w).Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Authorization, X-Huzu-User, Content-Type, Accept")
 
 }
